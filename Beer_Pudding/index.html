@@ -1,0 +1,1360 @@
+<!doctype html>
+
+<script type="text/javascript">
+    (function() {
+        // only want one resizer on the page
+        if (document.documentElement.className.indexOf("g-resizer-v3-init") > -1) return;
+        document.documentElement.className += " g-resizer-v3-init";
+        // require IE9+
+        if (!("querySelector" in document)) return;
+        function resizer() {
+            var elements = Array.prototype.slice.call(document.querySelectorAll(".g-artboard[data-min-width]")),
+                widthById = {};
+            elements.forEach(function(el) {
+                var parent = el.parentNode,
+                    width = widthById[parent.id] || parent.getBoundingClientRect().width,
+                    minwidth = el.getAttribute("data-min-width"),
+                    maxwidth = el.getAttribute("data-max-width");
+                widthById[parent.id] = width;
+                if (+minwidth <= width && (+maxwidth >= width || maxwidth === null)) {
+                    el.style.display = "block";
+                } else {
+                    el.style.display = "none";
+                }
+            });
+            try {
+                if (window.parent && window.parent.$) {
+                    window.parent.$("body").trigger("resizedcontent", [window]);
+                }
+                if (window.require) {
+                    require(['foundation/main'], function() {
+                        require(['shared/interactive/instances/app-communicator'], function(AppCommunicator) {
+                            AppCommunicator.triggerResize();
+                        });
+                    });
+                }
+            } catch(e) { console.log(e); }
+        }
+        document.addEventListener('DOMContentLoaded', resizer);
+        // feel free to replace throttle with _.throttle, if available
+        window.addEventListener('resize', throttle(resizer, 200));        
+        function throttle(func, wait) {
+            // from underscore.js
+            var _now = Date.now || function() { return new Date().getTime(); },
+                context, args, result, timeout = null, previous = 0;
+            var later = function() {
+                previous = _now();
+                timeout = null;
+                result = func.apply(context, args);
+                if (!timeout) context = args = null;
+            };
+            return function() {
+                var now = _now(), remaining = wait - (now - previous);
+                context = this;
+                args = arguments;
+                if (remaining <= 0 || remaining > wait) {
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        timeout = null;
+                    }
+                    previous = now;
+                    result = func.apply(context, args);
+                    if (!timeout) context = args = null;
+                } else if (!timeout && options.trailing !== false) {
+                    timeout = setTimeout(later, remaining);
+                }
+                return result;
+            };
+        }
+       
+    })();
+</script>
+
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      
+    <style>
+        body {
+            margin:auto;
+            padding:50px 10px;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .serif {
+            font-family: 'Lora', serif;
+        }
+        .sans-serif {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        /* choose a light or dark theme to add to the body tag. */
+        .dark-theme {
+            background-color: #151515;
+            color: #fbfbfb;
+        }
+        .light-theme {
+            background-color: white;
+            color: black;
+        }
+
+        .header {
+            padding-top:20px;
+            padding-bottom:20px;
+        }
+
+        .story-body, .header, .chart-section, .footer {
+            margin:auto;
+            max-width: 700px;
+        }
+
+        .footer {
+            padding-top:20px;
+            padding-bottom:20px;
+        }
+
+        .chart-section.wide{
+            width:100%;
+            max-width:1200px;
+        }
+
+        .chart-section.wide p.chart-title {
+            width:100%;
+            max-width:700px;
+            margin-left:auto;
+            margin-right:auto;
+        }
+        .chart-section.wide p.chart-subhead {
+            width:100%;
+            max-width:700px;
+            margin-left:auto;
+            margin-right:auto;
+        }
+
+
+        /* text styles */
+
+        p.kicker {
+            font-size:1rem;
+            text-transform:uppercase;
+        }
+
+        .text-center {
+            text-align:center;
+        }
+
+        h1.headline {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 0.25rem;
+            margin-top: 1rem;
+            font-weight: 800;
+        }
+
+        h2.subhead {
+            font-size: 1.4rem;
+            line-height: 2rem;
+            margin-bottom:0;
+            margin-top: 15px;
+            font-weight: 400;
+        }
+
+        p.body-text {
+            font-size: 1.1rem;
+            line-height: 1.4;
+            margin-top:0;
+            margin-bottom:15px;
+        }
+
+        h3.section-head {
+            font-size:2rem;
+            margin:40px 0 10px 0;
+            font-weight:700;
+            line-height:1.3;
+        }
+
+        .byline {
+            font-size: 1.1rem;
+            line-height: 0.75;
+            margin-top: 1.5rem;
+            font-weight: 500;
+        }
+
+        .date {
+            font-size: 0.85rem;
+            line-height: 1;
+            margin-top: 10px;
+            font-weight:400;
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+        }
+
+
+        p.note {
+            font-size:0.85rem;
+        }
+
+        /* chart styles */
+
+        .chart-section {
+            width:100%;
+            max-width:1200px;
+            padding:20px 0px;
+        }
+
+        .story-body .chart-section {
+            padding-top:0px;
+        }
+
+
+        .chart-row {
+            display:flex;
+            justify-content: space-between;
+            margin-top:20px;
+        }
+
+        p.chart-title {
+            font-size:1.3rem;
+            font-weight:700;
+            max-width:700px;
+            margin:0px auto 5px auto;
+        }
+        p.chart-subhead {
+            margin:0 auto;
+            max-width:700px;
+            font-size:1rem;
+            margin-bottom:15px;
+        }
+
+        p.chart-label {
+            margin:0 0 5px 0;
+            font-size:0.85rem;
+            text-transform:uppercase;
+            font-weight:600;
+        }
+
+        .chart-row .chart {
+            width:100%;
+            padding-right:15px;
+            min-width:calc(25% - 15px);
+
+        }
+
+
+
+        p.chart-source {
+            font-size:0.85rem;
+            margin:0;
+        }
+
+
+
+
+
+        /* photos */
+
+        .photo-section {
+            padding:30px 0px;
+            width:100%;
+            margin:auto;
+            display:flex;
+            max-width:1200px;
+        }
+
+        .photo {
+            width:100%;
+            padding-right:15px;
+        }
+        .photo img {
+            width:100%;	
+        }
+
+        p.caption {
+            font-size:0.9rem;
+            margin:0;
+        }
+
+
+
+        /* mobile */
+
+        @media (max-width:700px) {
+
+            .chart-row {
+                display:block;
+            }
+
+            .chart-row .chart {
+                padding:0;
+            }
+
+            .photo-section {
+                display:block;
+            }
+            .photo {
+                padding:0;
+            }
+
+        }
+
+        #g-templates-laptop, #g-templates-medium, #g-templates-mobile {
+            display: none;
+        }
+
+        @media (max-width: 490px) {
+            #g-templates-mobile {
+                display: block;
+            }
+        }
+
+        @media (min-width: 490px) and (max-width: 620px) {
+            #g-templates-laptop {
+                display: block;
+            }
+        }
+
+        @media (min-width: 620px)  {
+            #g-templates-medium {
+                display: block;
+            }
+        }
+
+    </style>
+    
+    <!-- google fonts: Open Sans (sans-serif) and Lora (serif) -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,400i,700&display=swap" rel="stylesheet">
+      
+    <title>This is your title</title>
+  </head>
+
+  <body class="light-theme"> <!-- all of the content on your html page goes inside the body -->
+
+    <div class="header">
+      <h1 class="headline">Western and Midwestern Breweries are the Best</h1>
+      <h2 class="subhead">But breweries just keep opening nationwide.</h2>
+      <p class="byline">By Aseem Shukla (but shamelessly ripped off from the Pudding)</p>
+      <p class="date">Published September 17, 2019</p>
+    </div>
+
+    <div class="story-body">
+      <p class="body-text serif">Beer is good. Some people <a href="https://www.buzzfeednews.com/article/skbaer/brett-kavanaugh-likes-beer">really like beer</a>. But who has the best beer, and has rising interest in this bubbly barleyed beverage peaked?</p>
+      <p class="body-text serif">To answer these questions, the Pudding (i.e. definitely not Me) went and found RateBeer.com data and created a metric of beer city quality by weighting Quality of brews (as measured by reviews) against the Quantity of beers made by the breweries of that city (given a minimum and maximum number of available beers and reviews per brewery).</p>
+      <p class="body-text serif">Using an 80%-20% quality-quantity weighting, Santa Rosa, CA emerges as the number 1 beer city. And perhaps unsurprisingly to beer aficionados, the top 10 list of beer cities is rounded out by other places on the West Coast, the Mountain West, or the Midwest.</p>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-row">
+          <div class="chart">
+
+
+
+
+            <!--- PASTE YOUR AI2HTML AFTER THIS LINE -->
+
+
+
+<!-- Generated by ai2html v0.89.0 - 2019-09-17 21:24 -->
+<!-- ai file: chart1.ai -->
+<style type='text/css' media='screen,print'>
+    #g-chart1-box .g-artboard {
+        margin:0 auto;
+    }
+    #g-chart1-box p {
+        margin:0;
+    }
+    .g-aiAbs {
+        position:absolute;
+    }
+    .g-aiImg {
+        display:block;
+        width:100% !important;
+    }
+    .g-aiSymbol {
+        position: absolute;
+        box-sizing: border-box;
+    }
+    .g-aiPointText p { white-space: nowrap; }
+    #g-chart1-medium {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart1-medium p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart1-medium .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart1-medium .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart1-medium .g-pstyle2 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+    #g-chart1-laptop {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart1-laptop p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart1-laptop .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart1-laptop .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart1-laptop .g-pstyle2 {
+        font-size:15px;
+        line-height:18px;
+        height:18px;
+    }
+    #g-chart1-laptop .g-pstyle3 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+    #g-chart1-mobile {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart1-mobile p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart1-mobile .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart1-mobile .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart1-mobile .g-pstyle2 {
+        font-size:12px;
+        line-height:14px;
+        height:14px;
+        letter-spacing:0.05em;
+        color:rgb(165,130,90);
+    }
+    #g-chart1-mobile .g-pstyle3 {
+        font-size:15px;
+        line-height:18px;
+        height:18px;
+    }
+    #g-chart1-mobile .g-pstyle4 {
+        font-size:12px;
+        line-height:14px;
+        height:14px;
+        letter-spacing:0.05em;
+        text-align:center;
+        color:rgb(83,65,45);
+    }
+    #g-chart1-mobile .g-pstyle5 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+
+</style>
+
+<div id="g-chart1-box" class="ai2html">
+
+    <!-- Artboard: medium -->
+    <div id="g-chart1-medium" class="g-artboard" style="width:620px; height:487px;" data-aspect-ratio="1.273" data-min-width="620">
+        <img id="g-chart1-medium-img" class="g-aiImg g-aiAbs" alt="" src="chart1-medium.png"/>
+        <div id="g-ai0-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:3.4462%;margin-top:-11.8px;left:1.1338%;width:416px;">
+            <p class="g-pstyle0">The Midwest and West Have the &ldquo;Best&rdquo; Beer Cities</p>
+        </div>
+        <div id="g-ai0-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:7.2271%;margin-top:-10.2px;left:1.1338%;width:449px;">
+            <p class="g-pstyle1">As measured by weighing &ldquo;quality&rdquo; at 80% and &ldquo;quantity&rdquo; at 20%.</p>
+        </div>
+        <div id="g-ai0-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:16.8781%;margin-top:-10.2px;left:14.8435%;width:99px;">
+            <p class="g-pstyle1">#5 Portland</p>
+        </div>
+        <div id="g-ai0-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:24.681%;margin-top:-10.2px;left:55.154%;width:123px;">
+            <p class="g-pstyle1">#6 Minneapolis</p>
+        </div>
+        <div id="g-ai0-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:31.0464%;margin-top:-10.2px;left:70.1833%;width:110px;">
+            <p class="g-pstyle1">#8 Ann Arbor</p>
+        </div>
+        <div id="g-ai0-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:33.0998%;margin-top:-10.2px;left:55.2703%;width:96px;">
+            <p class="g-pstyle1">#7 Chicago</p>
+        </div>
+        <div id="g-ai0-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:33.3051%;margin-top:-10.2px;left:26.0976%;width:138px;">
+            <p class="g-pstyle1">#10 Salt Lake City</p>
+        </div>
+        <div id="g-ai0-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.3319%;margin-top:-10.2px;left:3.8367%;width:114px;">
+            <p class="g-pstyle1">#1 Santa Rosa</p>
+        </div>
+        <div id="g-ai0-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:38.2332%;margin-top:-10.2px;left:38.8861%;width:90px;">
+            <p class="g-pstyle1">#3 Denver</p>
+        </div>
+        <div id="g-ai0-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:41.5186%;margin-top:-10.2px;left:61.2209%;width:96px;">
+            <p class="g-pstyle1">#9 St. Louis</p>
+        </div>
+        <div id="g-ai0-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:51.3749%;margin-top:-10.2px;left:16.0931%;width:109px;">
+            <p class="g-pstyle1">#2 San Diego</p>
+        </div>
+        <div id="g-ai0-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:79.0957%;margin-top:-10.2px;left:12.7347%;width:115px;">
+            <p class="g-pstyle1">#4 Anchorage</p>
+        </div>
+        <div id="g-ai0-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:97.5583%;margin-top:-9.1px;left:1.1338%;width:490px;">
+            <p class="g-pstyle2">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: laptop -->
+    <div id="g-chart1-laptop" class="g-artboard" style="width:490px; height:491px;" data-aspect-ratio="0.998" data-min-width="490" data-max-width="619">
+        <img id="g-chart1-laptop-img" class="g-aiImg g-aiAbs" alt="" src="chart1-laptop.png"/>
+        <div id="g-ai1-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:2.8072%;margin-top:-11.8px;left:1.1284%;width:416px;">
+            <p class="g-pstyle0">The Midwest and West Have the &ldquo;Best&rdquo; Beer Cities</p>
+        </div>
+        <div id="g-ai1-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:6.5572%;margin-top:-10.2px;left:1.1284%;width:449px;">
+            <p class="g-pstyle1">As measured by weighing &ldquo;quality&rdquo; at 80% and &ldquo;quantity&rdquo; at 20%.</p>
+        </div>
+        <div id="g-ai1-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:15.9259%;margin-top:-10.2px;left:5.6487%;width:94px;">
+            <p class="g-pstyle1">#5 Portland</p>
+        </div>
+        <div id="g-ai1-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:23.6651%;margin-top:-10.2px;left:51.4774%;width:117px;">
+            <p class="g-pstyle1">#6 Minneapolis</p>
+        </div>
+        <div id="g-ai1-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:29.3678%;margin-top:-10.2px;left:68.5641%;width:105px;">
+            <p class="g-pstyle1">#8 Ann Arbor</p>
+        </div>
+        <div id="g-ai1-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:31.4045%;margin-top:-10.2px;left:22.1108%;width:131px;">
+            <p class="g-pstyle1">#10 Salt Lake City</p>
+        </div>
+        <div id="g-ai1-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:31.7305%;margin-top:-9.8px;left:2.3037%;width:104px;">
+            <p class="g-pstyle2">#1 Santa Rosa</p>
+        </div>
+        <div id="g-ai1-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.0521%;margin-top:-10.2px;left:49.5687%;width:92px;">
+            <p class="g-pstyle1">#7 Chicago</p>
+        </div>
+        <div id="g-ai1-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:36.0889%;margin-top:-10.2px;left:32.9825%;width:86px;">
+            <p class="g-pstyle1">#3 Denver</p>
+        </div>
+        <div id="g-ai1-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:39.1437%;margin-top:-10.2px;left:58.3747%;width:92px;">
+            <p class="g-pstyle1">#9 St. Louis</p>
+        </div>
+        <div id="g-ai1-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:48.5125%;margin-top:-10.2px;left:7.0693%;width:104px;">
+            <p class="g-pstyle1">#2 San Diego</p>
+        </div>
+        <div id="g-ai1-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:78.655%;margin-top:-10.2px;left:14.2534%;width:109px;">
+            <p class="g-pstyle1">#4 Anchorage</p>
+        </div>
+        <div id="g-ai1-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:97.5782%;margin-top:-9.1px;left:1.1284%;width:490px;">
+            <p class="g-pstyle3">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: mobile -->
+    <div id="g-chart1-mobile" class="g-artboard" style="width:375px; height:596.799999999999px;" data-aspect-ratio="0.628" data-min-width="375" data-max-width="489">
+        <img id="g-chart1-mobile-img" class="g-aiImg g-aiAbs" alt="" src="chart1-mobile.png"/>
+        <div id="g-ai2-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:4.2867%;margin-top:-22.6px;left:1.7411%;width:331px;">
+            <p class="g-pstyle0">The Midwest and West Have the &ldquo;Best&rdquo; </p>
+            <p class="g-pstyle0">Beer Cities</p>
+        </div>
+        <div id="g-ai2-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:11.1923%;margin-top:-19.8px;left:1.7411%;width:333px;">
+            <p class="g-pstyle1">As measured by weighing &ldquo;quality&rdquo; at 80% and </p>
+            <p class="g-pstyle1">&ldquo;quantity&rdquo; at 20%.</p>
+        </div>
+        <div id="g-ai2-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:21.6216%;margin-top:-9px;left:35.8974%;width:106px;">
+            <p class="g-pstyle2">Closer to here</p>
+        </div>
+        <div id="g-ai2-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:24.135%;margin-top:-9px;left:39.5065%;width:79px;">
+            <p class="g-pstyle2">the better</p>
+        </div>
+        <div id="g-ai2-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:25.4351%;margin-top:-9.8px;left:13.8102%;width:104px;">
+            <p class="g-pstyle3">#1 Santa Rosa</p>
+        </div>
+        <div id="g-ai2-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.8854%;margin-top:-10.2px;left:12.8911%;width:109px;">
+            <p class="g-pstyle1">#4 Anchorage</p>
+        </div>
+        <div id="g-ai2-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:36.7286%;margin-top:-10.2px;left:53.6372%;width:104px;">
+            <p class="g-pstyle1">#2 San Diego</p>
+        </div>
+        <div id="g-ai2-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:43.4309%;margin-top:-10.2px;left:22.5971%;width:117px;">
+            <p class="g-pstyle1">#6 Minneapolis</p>
+        </div>
+        <div id="g-ai2-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:44.7715%;margin-top:-10.2px;left:58.6971%;width:86px;">
+            <p class="g-pstyle1">#3 Denver</p>
+        </div>
+        <div id="g-ai2-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:47.2848%;margin-top:-10.2px;left:8.657%;width:105px;">
+            <p class="g-pstyle1">#8 Ann Arbor</p>
+        </div>
+        <div id="g-ai2-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:51.4739%;margin-top:-10.2px;left:60.8477%;width:94px;">
+            <p class="g-pstyle1">#5 Portland</p>
+        </div>
+        <div id="g-ai2-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:55.931%;margin-top:-19.8px;left:8.4914%;width:107px;">
+            <p class="g-pstyle1">#10 Salt Lake </p>
+            <p class="g-pstyle1">City</p>
+        </div>
+        <div id="g-ai2-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:55.998%;margin-top:-10.2px;left:56.9031%;width:92px;">
+            <p class="g-pstyle1">#7 Chicago</p>
+        </div>
+        <div id="g-ai2-14" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:62.7004%;margin-top:-10.2px;left:8.4096%;width:92px;">
+            <p class="g-pstyle1">#9 St. Louis</p>
+        </div>
+        <div id="g-ai2-15" class="g-ai2html-settings g-aiAbs g-aiPointText" style="transform: matrix(0.2425,0.9701,-0.9701,0.2425,0,0);transform-origin: 50% 55.5324436760495%;-webkit-transform: matrix(0.2425,0.9701,-0.9701,0.2425,0,0);-webkit-transform-origin: 50% 55.5324436760495%;-ms-transform: matrix(0.2425,0.9701,-0.9701,0.2425,0,0);-ms-transform-origin: 50% 55.5324436760495%;top:80.1001%;margin-top:-9px;left:38.0583%;margin-left:-32px;width:64px;">
+            <p class="g-pstyle4">Quality</p>
+        </div>
+        <div id="g-ai2-16" class="g-ai2html-settings g-aiAbs g-aiPointText" style="transform: matrix(0.9701,-0.2425,0.2425,0.9701,0,0);transform-origin: 50% 55.5324436760495%;-webkit-transform: matrix(0.9701,-0.2425,0.2425,0.9701,0,0);-webkit-transform-origin: 50% 55.5324436760495%;-ms-transform: matrix(0.9701,-0.2425,0.2425,0.9701,0,0);-ms-transform-origin: 50% 55.5324436760495%;top:85.9647%;margin-top:-9px;left:56.2714%;margin-left:-35.5px;width:71px;">
+            <p class="g-pstyle4">Quantity</p>
+        </div>
+        <div id="g-ai2-17" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:95.5946%;margin-top:-17.5px;left:1.8745%;width:371px;">
+            <p class="g-pstyle5">Source: Russell Goldenberg, The Pudding, based on an analysis </p>
+            <p class="g-pstyle5">of RateBeer.com data</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- End ai2html - 2019-09-17 21:24 -->
+
+
+
+
+
+        </div>
+        </div>
+    </div>
+
+    <div class="story-body">
+        <p class="body-text serif">Apparently, more and more brewers nationwide want in on the action. Despite the fact that many decades have passed since President Carter <a href="https://www.kegworks.com/blog/how-jimmy-carter-sparked-the-craft-beer-revolution/">deregulated the brewing industry</a>, the years from 2010-2016 saw explosive growth in the number of new brewery openings.</p>
+    </div>
+      
+
+      <div class="chart-section">
+        <div class="chart-row">
+          <div class="chart">
+
+<!-- Generated by ai2html v0.89.0 - 2019-09-17 11:44 -->
+<!-- ai file: chart2.ai -->
+<style type='text/css' media='screen,print'>
+    #g-chart2-box .g-artboard {
+        margin:0 auto;
+    }
+    #g-chart2-box p {
+        margin:0;
+    }
+    .g-aiAbs {
+        position:absolute;
+    }
+    .g-aiImg {
+        display:block;
+        width:100% !important;
+    }
+    .g-aiSymbol {
+        position: absolute;
+        box-sizing: border-box;
+    }
+    .g-aiPointText p { white-space: nowrap; }
+    #g-chart2-medium {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart2-medium p {
+        font-weight:500;
+        font-size:14px;
+        line-height:17px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart2-medium .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart2-medium .g-pstyle1 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+    }
+    #g-chart2-medium .g-pstyle2 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        color:rgb(116,91,63);
+    }
+    #g-chart2-medium .g-pstyle3 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        text-align:center;
+    }
+    #g-chart2-medium .g-pstyle4 {
+        height:17px;
+    }
+    #g-chart2-laptop {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart2-laptop p {
+        font-weight:500;
+        font-size:14px;
+        line-height:17px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart2-laptop .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart2-laptop .g-pstyle1 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+    }
+    #g-chart2-laptop .g-pstyle2 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        color:rgb(96,56,19);
+    }
+    #g-chart2-laptop .g-pstyle3 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        color:rgb(116,91,63);
+    }
+    #g-chart2-laptop .g-pstyle4 {
+        height:17px;
+    }
+    #g-chart2-mobile {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart2-mobile p {
+        font-weight:500;
+        font-size:14px;
+        line-height:17px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart2-mobile .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart2-mobile .g-pstyle1 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+    }
+    #g-chart2-mobile .g-pstyle2 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        color:rgb(96,56,19);
+    }
+    #g-chart2-mobile .g-pstyle3 {
+        font-size:16px;
+        line-height:19px;
+        height:19px;
+        color:rgb(116,91,63);
+    }
+    #g-chart2-mobile .g-pstyle4 {
+        height:17px;
+    }
+
+</style>
+
+<div id="g-chart2-box" class="ai2html">
+
+    <!-- Artboard: medium -->
+    <div id="g-chart2-medium" class="g-artboard" style="width:620px; height:425px;" data-aspect-ratio="1.459" data-min-width="620">
+        <img id="g-chart2-medium-img" class="g-aiImg g-aiAbs" alt="" src="chart2-medium.png"/>
+        <div id="g-ai0-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:4.8902%;margin-top:-11.8px;left:1.6983%;width:458px;">
+            <p class="g-pstyle0">Brewery Openings in the US Have Exploded Since 2010</p>
+        </div>
+        <div id="g-ai0-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:10.6344%;margin-top:-10.2px;left:1.6983%;width:484px;">
+            <p class="g-pstyle1">As of 2016, there was no sign of slowing; we are not yet at &ldquo;peak beer.&rdquo;</p>
+        </div>
+        <div id="g-ai0-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:19.5755%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">900</p>
+        </div>
+        <div id="g-ai0-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:26.8696%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">800</p>
+        </div>
+        <div id="g-ai0-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.399%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">700</p>
+        </div>
+        <div id="g-ai0-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="transform: matrix(0,1,-1,0,0,0);transform-origin: 50% 54.9037448520257%;-webkit-transform: matrix(0,1,-1,0,0,0);-webkit-transform-origin: 50% 54.9037448520257%;-ms-transform: matrix(0,1,-1,0,0,0);-ms-transform-origin: 50% 54.9037448520257%;top:53.2227%;margin-top:-10.2px;left:96.5225%;margin-left:-85px;width:170px;">
+            <p class="g-pstyle3"># of Breweries opened</p>
+        </div>
+        <div id="g-ai0-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:41.9284%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">600</p>
+        </div>
+        <div id="g-ai0-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:49.4578%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">500</p>
+        </div>
+        <div id="g-ai0-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:56.7521%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">400</p>
+        </div>
+        <div id="g-ai0-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:64.2814%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">300</p>
+        </div>
+        <div id="g-ai0-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:71.8108%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">200</p>
+        </div>
+        <div id="g-ai0-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:79.3402%;margin-top:-10.2px;left:90.1948%;width:40px;">
+            <p class="g-pstyle2">100</p>
+        </div>
+        <div id="g-ai0-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:4.4665%;width:46px;">
+            <p class="g-pstyle2">1998</p>
+        </div>
+        <div id="g-ai0-14" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:13.7103%;width:46px;">
+            <p class="g-pstyle2">2000</p>
+        </div>
+        <div id="g-ai0-15" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:22.9543%;width:46px;">
+            <p class="g-pstyle2">2002</p>
+        </div>
+        <div id="g-ai0-16" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:32.1984%;width:46px;">
+            <p class="g-pstyle2">2004</p>
+        </div>
+        <div id="g-ai0-17" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:41.4423%;width:46px;">
+            <p class="g-pstyle2">2006</p>
+        </div>
+        <div id="g-ai0-18" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:50.6863%;width:46px;">
+            <p class="g-pstyle2">2008</p>
+        </div>
+        <div id="g-ai0-19" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:59.9302%;width:46px;">
+            <p class="g-pstyle2">2010</p>
+        </div>
+        <div id="g-ai0-20" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:69.1743%;width:46px;">
+            <p class="g-pstyle2">2012</p>
+        </div>
+        <div id="g-ai0-21" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:78.4181%;width:46px;">
+            <p class="g-pstyle2">2014</p>
+        </div>
+        <div id="g-ai0-22" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:90.399%;margin-top:-10.2px;left:87.6622%;width:46px;">
+            <p class="g-pstyle2">2016</p>
+        </div>
+        <div id="g-ai0-23" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:96.9668%;margin-top:-9.1px;left:1.6983%;width:490px;">
+            <p class="g-pstyle4">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: laptop -->
+    <div id="g-chart2-laptop" class="g-artboard" style="width:490px; height:455.000000000002px;" data-aspect-ratio="1.077" data-min-width="490" data-max-width="619">
+        <img id="g-chart2-laptop-img" class="g-aiImg g-aiAbs" alt="" src="chart2-laptop.png"/>
+        <div id="g-ai1-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:4.1282%;margin-top:-11.8px;left:1.861%;width:458px;">
+            <p class="g-pstyle0">Brewery Openings in the US Have Exploded Since 2010</p>
+        </div>
+        <div id="g-ai1-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:9.4937%;margin-top:-10.2px;left:1.861%;width:484px;">
+            <p class="g-pstyle1">As of 2016, there was no sign of slowing; we are not yet at &ldquo;peak beer.&rdquo;</p>
+        </div>
+        <div id="g-ai1-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:18.0651%;margin-top:-10.2px;left:1.861%;width:218px;">
+            <p class="g-pstyle2">Number of breweries opened</p>
+        </div>
+        <div id="g-ai1-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:21.8013%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">900</p>
+        </div>
+        <div id="g-ai1-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:28.6145%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">800</p>
+        </div>
+        <div id="g-ai1-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:35.6474%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">700</p>
+        </div>
+        <div id="g-ai1-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:42.6804%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">600</p>
+        </div>
+        <div id="g-ai1-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:49.7134%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">500</p>
+        </div>
+        <div id="g-ai1-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:56.5267%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">400</p>
+        </div>
+        <div id="g-ai1-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:63.5595%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">300</p>
+        </div>
+        <div id="g-ai1-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:70.5925%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">200</p>
+        </div>
+        <div id="g-ai1-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:77.6255%;margin-top:-10.2px;left:92.5935%;width:40px;">
+            <p class="g-pstyle3">100</p>
+        </div>
+        <div id="g-ai1-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:4.1209%;width:46px;">
+            <p class="g-pstyle3">1998</p>
+        </div>
+        <div id="g-ai1-14" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:13.5722%;width:46px;">
+            <p class="g-pstyle3">2000</p>
+        </div>
+        <div id="g-ai1-15" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:22.8197%;width:46px;">
+            <p class="g-pstyle3">2002</p>
+        </div>
+        <div id="g-ai1-16" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:32.4755%;width:46px;">
+            <p class="g-pstyle3">2004</p>
+        </div>
+        <div id="g-ai1-17" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:41.5189%;width:46px;">
+            <p class="g-pstyle3">2006</p>
+        </div>
+        <div id="g-ai1-18" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:50.9704%;width:46px;">
+            <p class="g-pstyle3">2008</p>
+        </div>
+        <div id="g-ai1-19" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:60.0138%;width:46px;">
+            <p class="g-pstyle3">2010</p>
+        </div>
+        <div id="g-ai1-20" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:69.6696%;width:46px;">
+            <p class="g-pstyle3">2012</p>
+        </div>
+        <div id="g-ai1-21" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:78.9168%;width:46px;">
+            <p class="g-pstyle3">2014</p>
+        </div>
+        <div id="g-ai1-22" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.1749%;margin-top:-10.2px;left:88.1645%;width:46px;">
+            <p class="g-pstyle3">2016</p>
+        </div>
+        <div id="g-ai1-23" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:96.7272%;margin-top:-9.1px;left:1.861%;width:490px;">
+            <p class="g-pstyle4">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: mobile -->
+    <div id="g-chart2-mobile" class="g-artboard" style="width:375px; height:483.799999999997px;" data-aspect-ratio="0.775" data-min-width="375" data-max-width="489">
+        <img id="g-chart2-mobile-img" class="g-aiImg g-aiAbs" alt="" src="chart2-mobile.png"/>
+        <div id="g-ai2-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:5.0812%;margin-top:-22.6px;left:2.5651%;width:372px;">
+            <p class="g-pstyle0">Brewery Openings in the US Have Exploded </p>
+            <p class="g-pstyle0">Since 2010</p>
+        </div>
+        <div id="g-ai2-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:13.3932%;margin-top:-19.8px;left:2.5651%;width:367px;">
+            <p class="g-pstyle1">As of 2016, there was no sign of slowing; we are not </p>
+            <p class="g-pstyle1">yet at &ldquo;peak beer.&rdquo;</p>
+        </div>
+        <div id="g-ai2-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:21.7438%;margin-top:-10.2px;left:2.5651%;width:218px;">
+            <p class="g-pstyle2">Number of breweries opened</p>
+        </div>
+        <div id="g-ai2-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:25.6709%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">900</p>
+        </div>
+        <div id="g-ai2-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:32.0785%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">800</p>
+        </div>
+        <div id="g-ai2-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:38.6928%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">700</p>
+        </div>
+        <div id="g-ai2-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:45.3071%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">600</p>
+        </div>
+        <div id="g-ai2-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:51.9214%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">500</p>
+        </div>
+        <div id="g-ai2-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:58.3291%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">400</p>
+        </div>
+        <div id="g-ai2-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:64.9433%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">300</p>
+        </div>
+        <div id="g-ai2-11" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:71.5576%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">200</p>
+        </div>
+        <div id="g-ai2-12" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:78.1719%;margin-top:-10.2px;left:90.7221%;width:40px;">
+            <p class="g-pstyle3">100</p>
+        </div>
+        <div id="g-ai2-13" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.0934%;margin-top:-10.2px;left:14.401%;width:46px;">
+            <p class="g-pstyle3">2000</p>
+        </div>
+        <div id="g-ai2-14" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.0934%;margin-top:-10.2px;left:31.6346%;width:46px;">
+            <p class="g-pstyle3">2004</p>
+        </div>
+        <div id="g-ai2-15" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.0934%;margin-top:-10.2px;left:49.1346%;width:46px;">
+            <p class="g-pstyle3">2008</p>
+        </div>
+        <div id="g-ai2-16" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.0934%;margin-top:-10.2px;left:66.6349%;width:46px;">
+            <p class="g-pstyle3">2012</p>
+        </div>
+        <div id="g-ai2-17" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:88.0934%;margin-top:-10.2px;left:84.4016%;width:46px;">
+            <p class="g-pstyle3">2016</p>
+        </div>
+        <div id="g-ai2-18" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:95.8059%;margin-top:-17.5px;left:2.5651%;width:371px;">
+            <p class="g-pstyle4">Source: Russell Goldenberg, The Pudding, based on an analysis </p>
+            <p class="g-pstyle4">of RateBeer.com data</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- End ai2html - 2019-09-17 11:44 -->
+
+
+      </div>
+        </div>
+    </div>
+
+    <div class="story-body">
+        <p class="body-text serif">But even as beer-brewing continues to spur many would-be Sam Adamses into action, the propensity of thinking people to start fermenting grain seems to differ by state. As an example, the good people of California, while generating the greatest number of new breweries annually, fall well behind those of Vermont, whose denizens found breweries at a higher (and as of 2016, still growing) rate than those of any other state.</p>
+    </div>
+
+<div class="chart-section">
+        <div class="chart-row">
+          <div class="chart">
+
+
+<!-- Generated by ai2html v0.89.0 - 2019-09-17 11:44 -->
+<!-- ai file: chart3.ai -->
+<style type='text/css' media='screen,print'>
+    #g-chart3-box .g-artboard {
+        margin:0 auto;
+    }
+    #g-chart3-box p {
+        margin:0;
+    }
+    .g-aiAbs {
+        position:absolute;
+    }
+    .g-aiImg {
+        display:block;
+        width:100% !important;
+    }
+    .g-aiSymbol {
+        position: absolute;
+        box-sizing: border-box;
+    }
+    .g-aiPointText p { white-space: nowrap; }
+    #g-chart3-medium {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart3-medium p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart3-medium .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart3-medium .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart3-medium .g-pstyle2 {
+        font-size:24px;
+        line-height:28px;
+        height:28px;
+        color:rgb(116,91,63);
+    }
+    #g-chart3-medium .g-pstyle3 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+    #g-chart3-medium .g-cstyle0 {
+        font-weight:500;
+    }
+    #g-chart3-laptop {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart3-laptop p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart3-laptop .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart3-laptop .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart3-laptop .g-pstyle2 {
+        font-size:20px;
+        line-height:24px;
+        height:24px;
+        color:rgb(116,91,63);
+    }
+    #g-chart3-laptop .g-pstyle3 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+    #g-chart3-laptop .g-cstyle0 {
+        font-weight:500;
+    }
+    #g-chart3-mobile {
+        position:relative;
+        overflow:hidden;
+    }
+    #g-chart3-mobile p {
+        font-weight:500;
+        font-size:16px;
+        line-height:19px;
+        height:auto;
+        filter:alpha(opacity=100);
+        -ms-filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+        opacity:1;
+        letter-spacing:0em;
+        text-align:left;
+        color:rgb(0,0,0);
+        text-transform:none;
+        padding-bottom:0;
+        padding-top:0;
+        mix-blend-mode:normal;
+        font-style:normal;
+        position:static;
+    }
+    #g-chart3-mobile .g-pstyle0 {
+        font-weight:700;
+        font-size:18px;
+        line-height:22px;
+        height:22px;
+    }
+    #g-chart3-mobile .g-pstyle1 {
+        height:19px;
+    }
+    #g-chart3-mobile .g-pstyle2 {
+        font-size:17px;
+        line-height:21px;
+        height:21px;
+        color:rgb(116,91,63);
+    }
+    #g-chart3-mobile .g-pstyle3 {
+        font-size:14px;
+        line-height:17px;
+        height:17px;
+    }
+    #g-chart3-mobile .g-cstyle0 {
+        font-weight:500;
+    }
+
+</style>
+
+<div id="g-chart3-box" class="ai2html">
+
+    <!-- Artboard: medium -->
+    <div id="g-chart3-medium" class="g-artboard" style="width:620px; height:344px;" data-aspect-ratio="1.802" data-min-width="620">
+        <img id="g-chart3-medium-img" class="g-aiImg g-aiAbs" alt="" src="chart3-medium.png"/>
+        <div id="g-ai0-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:4.8788%;margin-top:-11.8px;left:1.8793%;width:462px;">
+            <p class="g-pstyle0">Vermont Has the Highest Brewery Openings Per Capita<span class="g-cstyle0"> </span></p>
+        </div>
+        <div id="g-ai0-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:12.2662%;margin-top:-10.2px;left:1.8793%;width:454px;">
+            <p class="g-pstyle1">California, which has the most openings, lags on a per-head basis</p>
+        </div>
+        <div id="g-ai0-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:20.9872%;margin-top:-10.2px;left:16.3954%;width:258px;">
+            <p class="g-pstyle1">Breweries opened per 100,000 people</p>
+        </div>
+        <div id="g-ai0-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:29.4174%;margin-top:-10.2px;left:23.868%;width:85px;">
+            <p class="g-pstyle1">California</p>
+        </div>
+        <div id="g-ai0-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:29.4174%;margin-top:-10.2px;left:44.8272%;width:78px;">
+            <p class="g-pstyle1">Vermont</p>
+        </div>
+        <div id="g-ai0-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:54.8786%;margin-top:-17.8px;left:54.5449%;width:53px;">
+            <p class="g-pstyle2">1.0</p>
+        </div>
+        <div id="g-ai0-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:67.6693%;margin-top:-17.8px;left:54.5449%;width:53px;">
+            <p class="g-pstyle2">0.4</p>
+        </div>
+        <div id="g-ai0-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:84.8204%;margin-top:-17.8px;left:8.5484%;width:71px;">
+            <p class="g-pstyle2">1997</p>
+        </div>
+        <div id="g-ai0-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:84.8204%;margin-top:-17.8px;left:49.6728%;width:71px;">
+            <p class="g-pstyle2">2016</p>
+        </div>
+        <div id="g-ai0-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:94.5084%;margin-top:-9.1px;left:1.8793%;width:490px;">
+            <p class="g-pstyle3">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: laptop -->
+    <div id="g-chart3-laptop" class="g-artboard" style="width:490px; height:338px;" data-aspect-ratio="1.45" data-min-width="490" data-max-width="619">
+        <img id="g-chart3-laptop-img" class="g-aiImg g-aiAbs" alt="" src="chart3-laptop.png"/>
+        <div id="g-ai1-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:5.5572%;margin-top:-11.8px;left:2.4799%;width:462px;">
+            <p class="g-pstyle0">Vermont Has the Highest Brewery Openings Per Capita<span class="g-cstyle0"> </span></p>
+        </div>
+        <div id="g-ai1-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:13.0757%;margin-top:-10.2px;left:2.4799%;width:454px;">
+            <p class="g-pstyle1">California, which has the most openings, lags on a per-head basis</p>
+        </div>
+        <div id="g-ai1-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:25.7976%;margin-top:-10.2px;left:8.6023%;width:258px;">
+            <p class="g-pstyle1">Breweries opened per 100,000 people</p>
+        </div>
+        <div id="g-ai1-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.3775%;margin-top:-10.2px;left:18.0574%;width:85px;">
+            <p class="g-pstyle1">California</p>
+        </div>
+        <div id="g-ai1-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:34.3775%;margin-top:-10.2px;left:44.5773%;width:78px;">
+            <p class="g-pstyle1">Vermont</p>
+        </div>
+        <div id="g-ai1-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:58.7376%;margin-top:-15.5px;left:65.1582%;width:49px;">
+            <p class="g-pstyle2">1.0</p>
+        </div>
+        <div id="g-ai1-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:69.9802%;margin-top:-15.5px;left:65.1582%;width:49px;">
+            <p class="g-pstyle2">0.4</p>
+        </div>
+        <div id="g-ai1-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:84.7731%;margin-top:-15.5px;left:3.1384%;width:66px;">
+            <p class="g-pstyle2">1997</p>
+        </div>
+        <div id="g-ai1-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:84.7731%;margin-top:-15.5px;left:59.9171%;width:66px;">
+            <p class="g-pstyle2">2016</p>
+        </div>
+        <div id="g-ai1-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:94.7068%;margin-top:-9.1px;left:2.4799%;width:490px;">
+            <p class="g-pstyle3">Source: Russell Goldenberg, The Pudding, based on an analysis of RateBeer.com data</p>
+        </div>
+    </div>
+
+    <!-- Artboard: mobile -->
+    <div id="g-chart3-mobile" class="g-artboard" style="width:375px; height:330.799999999999px;" data-aspect-ratio="1.134" data-min-width="375" data-max-width="489">
+        <img id="g-chart3-mobile-img" class="g-aiImg g-aiAbs" alt="" src="chart3-mobile.png"/>
+        <div id="g-ai2-1" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:7.7337%;margin-top:-22.6px;left:2.0404%;width:328px;">
+            <p class="g-pstyle0">VT Has the Highest Brewery Openings </p>
+            <p class="g-pstyle0">Per Capita<span class="g-cstyle0"> </span></p>
+        </div>
+        <div id="g-ai2-2" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:17.8947%;margin-top:-10.2px;left:2.0404%;width:341px;">
+            <p class="g-pstyle1">CA, which has the most openings, lags per-head</p>
+        </div>
+        <div id="g-ai2-3" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:26.6614%;margin-top:-10.2px;left:2.0404%;width:258px;">
+            <p class="g-pstyle1">Breweries opened per 100,000 people</p>
+        </div>
+        <div id="g-ai2-4" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:33.9165%;margin-top:-10.2px;left:11.7284%;width:85px;">
+            <p class="g-pstyle1">California</p>
+        </div>
+        <div id="g-ai2-5" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:33.9165%;margin-top:-10.2px;left:46.381%;width:78px;">
+            <p class="g-pstyle1">Vermont</p>
+        </div>
+        <div id="g-ai2-6" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:56.0976%;margin-top:-13.6px;left:60.9286%;width:46px;">
+            <p class="g-pstyle2">1.0</p>
+        </div>
+        <div id="g-ai2-7" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:65.7711%;margin-top:-13.6px;left:60.9286%;width:46px;">
+            <p class="g-pstyle2">0.4</p>
+        </div>
+        <div id="g-ai2-8" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:78.7699%;margin-top:-13.6px;left:2.9008%;width:60px;">
+            <p class="g-pstyle2">1997</p>
+        </div>
+        <div id="g-ai2-9" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:78.7699%;margin-top:-13.6px;left:54.7823%;width:60px;">
+            <p class="g-pstyle2">2016</p>
+        </div>
+        <div id="g-ai2-10" class="g-ai2html-settings g-aiAbs g-aiPointText" style="top:92.0522%;margin-top:-17.5px;left:2.0404%;width:371px;">
+            <p class="g-pstyle3">Source: Russell Goldenberg, The Pudding, based on an analysis </p>
+            <p class="g-pstyle3">of RateBeer.com data</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- End ai2html - 2019-09-17 11:44 -->
+
+
+
+  </body>
+</html>
